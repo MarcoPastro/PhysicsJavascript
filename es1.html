@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Cannonball</title>
+</head>
+
+<body>
+
+<canvas id="myCanvas" style="border:2px solid"></canvas>
+
+<script>
+
+	// canvas setup -------------------------------------------------------
+    //init canvas adattivo per lo schermo
+	var canvas = document.getElementById("myCanvas");
+	var c = canvas.getContext("2d");
+
+	canvas.width = window.innerWidth - 20;
+	canvas.height = window.innerHeight - 100;
+
+	var simMinWidth = 20.0;
+	var cScale = Math.min(canvas.width, canvas.height) / simMinWidth;
+	var simWidth = canvas.width / cScale;
+	var simHeight = canvas.height / cScale;
+
+	function cX(pos) {
+		return pos.x * cScale;
+	}
+
+	function cY(pos) {
+		return canvas.height - pos.y * cScale;
+	}
+
+	// scene -------------------------------------------------------
+
+	var gravity = { x: 0.0, y: -10.0}; //unica forza che interviene approssimata a 10
+    //massa a 1 quindi forza facile da calcolare
+	var timeStep = 1.0 / 60.0; //calcolo ogni 60 frame per seconds (+ piccolo + preciso)
+    //supponiamo velocià costante nel corso di tutto il timeStep
+
+    //definizione degli attributi della palla (particella)
+	var ball = {
+		radius : 0.2,
+		pos : {x : 0.2, y : 0.2},  //x0
+		vel : {x : 10.0, y : 15.0} //v0
+	};
+
+	// drawing -------------------------------------------------------
+    // funzione per disegnare
+    //applicare trasfmormazione avendo due sistemi di coordinate differenti per la fisica e per il rendering su html
+	function draw() {
+		c.clearRect(0, 0, canvas.width, canvas.height);
+
+		c.fillStyle = "#FF0000";
+
+		c.beginPath();			
+		c.arc(
+			cX(ball.pos), cY(ball.pos), cScale * ball.radius, 0.0, 2.0 * Math.PI); //disegnare arco
+		c.closePath();
+		c.fill();			
+	}
+
+	// simulation ----------------------------------------------------
+    //funzione di simulazione
+	function simulate() {
+        //symplectic euler
+		ball.vel.x += gravity.x * timeStep;//calcolo velocità applicando forza (massa a 1)
+		ball.vel.y += gravity.y * timeStep;
+		ball.pos.x += ball.vel.x * timeStep;//calcolo nuova pos
+		ball.pos.y += ball.vel.y * timeStep;
+        
+        //controllo collisioni
+		if (ball.pos.x < 0.0) {
+			ball.pos.x = 0.0;
+			ball.vel.x = -ball.vel.x;
+		}
+		if (ball.pos.x > simWidth) {
+			ball.pos.x = simWidth;
+			ball.vel.x = -ball.vel.x;
+		}
+		if (ball.pos.y < 0.0) {
+			ball.pos.y = 0.0;
+			ball.vel.y = -ball.vel.y;
+		}
+	}
+
+	// make browser to call us repeatedly -----------------------------------
+    // loop di gioco alle chiamate di funzioni
+	function update() {
+		simulate();
+		draw();
+		requestAnimationFrame(update);//funzione di java che chiama update per ogni frame
+	}
+	
+	update();// chiamata iniziale
+	
+</script> 
+</body>
+</html>
